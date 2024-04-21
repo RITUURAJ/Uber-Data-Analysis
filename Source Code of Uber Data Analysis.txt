@@ -1,0 +1,253 @@
+---
+title: "CA-3"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)#visualization matplotlib in case of pyhton
+library(ggthemes)#add-on with ggplot
+library(dplyr)#data manipulation pandas in case of pandas
+library(lubridate)#date time
+library(scales)#graphical scalling
+library(tidyr)#tidy data
+library(DT)#table formatted result
+
+{r}
+apr_data <-read.csv("D:/uber-raw-data-apr14.csv")
+may_data <-read.csv("D:/uber-raw-data-may14.csv")
+jun_data <-read.csv("D:/uber-raw-data-jun14.csv")
+jul_data <-read.csv("D:/uber-raw-data-jul14.csv")
+aug_data <-read.csv("D:/uber-raw-data-aug14.csv")
+sep_data <-read.csv("D:/uber-raw-data-sep14.csv")
+
+{r include=FALSE}
+data_2014 <-rbind(apr_data,may_data,jun_data,jul_data,aug_data,sep_data)
+head(data_2014)
+str(data_2014)
+
+{r}
+data_2014$Date.Time<-as.POSIXct(data_2014$Date.Time,format = "%m/%d/%Y %H:%M:%S")
+
+{r}
+data_2014$Date.Time<-as.POSIXct(data_2014$Date.Time,format = "%m/%d/%Y %H:%M:%S")
+
+{r}
+data_2014$Time <-format(as.POSIXct(data_2014$Date.Time,format ="%m/%d/%Y %H:%M:%S"),format = "%H:%M:%S")
+
+{r include=FALSE}
+data_2014$Date.Time<-ymd_hms(data_2014$Date.Time)#formatting
+data_2014$day<-format(day(data_2014$Date.Time))#day
+data_2014$month<-format(month(data_2014$Date.Time, label = TRUE))
+data_2014$dayofweek <-format(wday(data_2014$Date.Time,label = TRUE)) #dayofweek
+head(data_2014)
+
+{r}
+data_2014$hour <-factor(hour(hms(data_2014$Time)))#we want all these as factor
+data_2014$minute <-factor(minute(hms(data_2014$Time)))
+data_2014$second <-factor(second(hms(data_2014$Time)))
+
+{r include=FALSE}
+hour_data <-data_2014 %>%
+  group_by(hour) %>%
+  summarise(Total=n()) #grouping the data wrt hour and count
+datatable(hour_data)
+
+Image 1
+
+{r}
+#visualize the data
+ggplot(hour_data, aes(hour,Total)) + geom_bar(stat = "identity",fill="yellow",color= "black")+
+  ggtitle("Trips By Hour")+ theme(legend.position = "none") +
+  scale_y_continuous(labels = comma)
+
+{r include=FALSE}
+month_hour_data <-data_2014 %>%
+  group_by(month,hour) %>%
+  summarise(Total=n())
+datatable(month_hour_data)
+
+Image 2
+
+{r}
+
+ggplot(month_hour_data, aes(hour,Total, fill=month)) + 
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Hour and month")+ 
+  scale_y_continuous(labels = comma)
+
+{r include=FALSE}
+sept_hour <-data_2014 %>%
+  group_by(hour,month)%>%
+  filter(month=="Sep")%>%
+  summarise(Total =n())
+
+Image 3
+
+{r}
+ggplot(month_hour_data,aes(hour,Total,fill=hour))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Hour and Month for september")+
+  scale_y_continuous(labels=comma)
+
+{r include=FALSE}
+apr_hour <-data_2014%>%
+  group_by(hour,month)%>%
+  filter(month == "Apr")%>%
+  summarise(Total=n())
+
+Image 4
+
+{r}
+ggplot(apr_hour,aes(hour,Total,fill=hour))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Hour and Month for April")+
+  scale_y_continuous(labels = comma)
+
+{r include=FALSE}
+day_data <- data_2014%>%
+  group_by(day)%>%
+  summarise(Total=n())
+datatable(day_data)
+
+Image 5
+
+{r}
+ggplot(day_data, aes(day,Total))+
+  geom_bar(stat = "identity",fill="red",color="black")+
+  ggtitle("Trips By Day")+
+  theme(legend.position = "none")+
+  scale_y_continuous(labels=comma)
+
+{r include=FALSE}
+month_day_data <-data_2014%>%
+  group_by(month,day)%>%
+  summarise(Total=n())
+datatable(month_day_data)
+
+Image 6
+
+{r}
+ggplot(month_day_data,aes(day,Total,fill=month))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Day and Month")+
+  scale_y_continuous(labels=comma)
+
+{r include=FALSE}
+sept_day <- data_2014%>%
+  group_by(day,month)%>%
+  filter(month=="Sep")%>%
+  summarise(Total=n())
+
+Image 7
+
+{r}
+ggplot(month_day_data,aes(day,Total,fill=day))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Day and Month")+
+  scale_y_continuous(labels=comma)
+
+{r include=FALSE}
+month_data <-data_2014%>%
+  group_by(month)%>%
+  summarise(Total=n())
+datatable(month_data)
+
+Image 8
+
+{r}
+ggplot(month_data,aes(month,Total,fill=month))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Month")+
+  scale_y_continuous(labels = comma)
+
+{r include=FALSE}
+month_weekday_data<-data_2014 %>%
+  group_by(month,dayofweek)%>%
+  summarise(Total=n())
+datatable(month_weekday_data)
+
+Image 9
+
+{r}
+ggplot(month_weekday_data,aes(month,Total,fill=dayofweek))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By month and weekday")+
+  scale_y_continuous(labels = comma)
+
+{r include=FALSE}
+weekday_data <- data_2014%>%
+  group_by(dayofweek)%>%
+  summarise(Total=n())
+datatable(weekday_data)
+
+Image 10
+
+{r}
+ggplot(weekday_data,aes(dayofweek,Total,fill=dayofweek))+
+  geom_bar(stat = "identity")+
+  ggtitle("Trips By Weekday")+
+  scale_y_continuous(labels = comma)
+
+Image 11
+
+{r}
+ggplot(data_2014,aes(Base))+
+  geom_bar(fill="green")+
+  scale_y_continuous(labels = comma)+
+  ggtitle("Trips By Base")
+
+Image 12
+
+{r}
+ggplot(data_2014,aes(Base,fill=month))+
+  geom_bar(position = "dodge")+
+  scale_y_continuous(labels=comma)+
+  ggtitle("Trips By Bases and Month")
+
+Image 13
+
+{r}
+ggplot(data_2014,aes(Base,fill=dayofweek))+
+  geom_bar(position = "dodge")+
+  scale_y_continuous(labels = comma)+
+  ggtitle("Trips By Bases and DayofWeek")
+
+{r include=FALSE}
+day_and_hour <-data_2014%>%
+  group_by(day,hour)%>%
+  dplyr::summarize(Total=n())
+datatable(day_and_hour)
+
+Image 14
+
+{r}
+ggplot(day_and_hour,aes(day,hour,fill=Total))+
+  geom_tile(color="white")+
+  ggtitle("Heat Map by Hour and Day")
+
+Image 15
+
+{r}
+min_lat <- 40.5774
+max_lat <- 40.9176
+min_long <- -74.15
+max_long <- -73.7004
+
+ggplot(data_2014, aes(x=Lon, y=Lat)) +
+  geom_point(size=1, color = "blue") +
+     scale_x_continuous(limits=c(min_long, max_long)) +
+      scale_y_continuous(limits=c(min_lat, max_lat)) +
+        theme_map() +
+           ggtitle("NYC MAP BASED ON UBER RIDES DURING 2014 (APR-SEP)")
+
+ggplot(data_2014, aes(x=Lon, y=Lat, color = Base)) +
+  geom_point(size=1) +
+     scale_x_continuous(limits=c(min_long, max_long)) +
+      scale_y_continuous(limits=c(min_lat, max_lat)) +
+       theme_map() +
+          ggtitle("NYC MAP BASED ON UBER RIDES DURING 2014 (APR-SEP) by BASE")
+
